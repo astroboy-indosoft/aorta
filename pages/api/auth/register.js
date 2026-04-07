@@ -1,6 +1,8 @@
-import bcrypt from 'bcryptjs';
-
-let users = [];
+import {
+  createUser,
+  findUserByNormalizedEmail,
+  hashPassword
+} from './users-store';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,27 +13,20 @@ export default async function handler(req, res) {
 
   const normalizeemail = email.toLowerCase();
 
-  const existing = users.find(u => u.normalizeemail === normalizeemail);
+  const existing = findUserByNormalizedEmail(normalizeemail);
   if (existing) {
     return res.status(400).json({ message: 'Email already exists' });
   }
 
-  const hashed_password = await bcrypt.hash(password, 10);
-
-  const user = {
-    id: users.length + 1,
+  const hashed_password = await hashPassword(password);
+  const user = createUser({
     firstname,
     lastname,
     username,
     email,
     normalizeemail,
-    hashed_password,
-    created_at: new Date(),
-    updated_at: new Date(),
-    deleted_at: null
-  };
-
-  users.push(user);
+    hashed_password
+  });
 
   return res.status(201).json({ id: user.id });
 }

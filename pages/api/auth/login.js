@@ -1,6 +1,4 @@
-import bcrypt from 'bcryptjs';
-
-let users = [];
+import { comparePassword, findUserByNormalizedEmail } from './users-store';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,13 +8,13 @@ export default async function handler(req, res) {
   const { email, password } = req.body;
   const normalizeemail = email.toLowerCase();
 
-  const user = users.find(u => u.normalizeemail === normalizeemail && !u.deleted_at);
+  const user = findUserByNormalizedEmail(normalizeemail);
 
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const valid = await bcrypt.compare(password, user.hashed_password);
+  const valid = await comparePassword(password, user.hashed_password);
 
   if (!valid) {
     return res.status(401).json({ message: 'Invalid credentials' });
